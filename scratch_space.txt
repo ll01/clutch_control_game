@@ -1,0 +1,47 @@
+   # # draw(output)
+        # # Wait for a short period before reading again
+        # # joystick.stop_rumble()
+        # # time.sleep(frame_time)
+
+        # text_rect = my_font.get_rect()
+
+        # pygame.display.flip()
+
+
+
+        
+                clutch_positions = np.array(axis_state["clutch"]) * 100
+                # clutch_positions = np.absolute(clutch_positions)
+                clutch_diff = np.diff(clutch_positions)
+                clutch_acceleration = calc_acceleration_timeseries(clutch_diff, time_delta)
+
+                clutch_accel_ma_3: float = clutch_acceleration[-5:].mean()
+                if abs(clutch_accel_ma_3) < epsilon:
+                    clutch_accel_ma_3 = 0.0
+
+                output = f"current clutch accel {clutch_accel_ma_3:.2f} "
+                text_surface, _ = my_font.render(output, (255, 255, 255), (0, 0, 0))
+                screen.blit(text_surface, (0, 0))
+
+                clutch_direction = clutch_diff[-10:].sum()
+                # if clutch_direction < 0:
+                #     output = output + "clutch moving down "
+                # elif clutch_direction > 0:
+                #     output = output + "clutch moving up "
+                # else:
+                #     output = output + "clutch stationary "
+
+                clutch_warning = ""
+
+                if clutch_accel_ma_3 > 0.3:
+                    clutch_warning = "too fast moving of clutch "
+                    text_surface2, rect = my_font.render(
+                        clutch_warning, (255, 255, 255), (0, 0, 0)
+                    )
+                    rect2 = rect.copy()
+                    screen.blit(text_surface2, (0, 50))
+                elif clutch_direction < 0:
+                    if rect2 is not None:
+                        screen.fill(pygame.Color("black"), (0, 26, 438, 200))
+                    text_surface2, _ = my_font.render(" ", (255, 255, 255), (0, 0, 0))
+                    screen.blit(text_surface2, (0, 50))
